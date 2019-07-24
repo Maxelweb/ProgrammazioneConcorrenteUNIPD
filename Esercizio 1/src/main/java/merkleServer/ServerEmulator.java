@@ -1,5 +1,7 @@
 package merkleServer;
 
+import merkleClient.HashUtil;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,9 +19,14 @@ public class ServerEmulator {
 
     public static void main(String[] args) {
         List<String> hashToCheck = new ArrayList<>();
-        hashToCheck.add(md5Java("3"));
-        hashToCheck.add(md5Java("01"));
-        hashToCheck.add(md5Java("4567"));
+        hashToCheck.add(HashUtil.md5Java("3"));
+        hashToCheck.add(HashUtil.md5Java("01"));
+        hashToCheck.add(HashUtil.md5Java("4567"));
+
+        /*hashToCheck.add(md5Java("test1"));
+        hashToCheck.add(md5Java("test2"));
+        hashToCheck.add(md5Java("test3"));*/
+
 
         debug("Avvio...");
 

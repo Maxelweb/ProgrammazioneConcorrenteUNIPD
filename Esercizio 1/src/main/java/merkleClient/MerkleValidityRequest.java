@@ -72,7 +72,7 @@ public class MerkleValidityRequest {
 			try(Socket sock = new Socket(authIPAddr, authPort))
 			{
 				PrintWriter outputFromSocket = new PrintWriter(sock.getOutputStream(), true);
-				ObjectInputStream inputFromSocket = new ObjectInputStream(sock.getInputStream());
+				ObjectInputStream inputToSocket = new ObjectInputStream(sock.getInputStream());
 
 				debug("Richiesta: " + request);
 
@@ -82,7 +82,7 @@ public class MerkleValidityRequest {
 				// Ricezione degli hash da confrontare
 				try
 				{
-					HashFromServer = (ArrayList<String>) inputFromSocket.readObject();
+					HashFromServer = (ArrayList<String>) inputToSocket.readObject();
 					debug("Ricevuti hash: " + HashFromServer);
 				}
 				catch(ClassNotFoundException e)
@@ -127,7 +127,8 @@ public class MerkleValidityRequest {
 		String HashedString = merkleTx;
 		for(String singleNode : merkleNodes)
 		{
-			HashedString = md5Java(HashedString + singleNode);
+			HashedString += singleNode;
+			HashedString = md5Java(HashedString);
 			debug("Hash calcolato: " + HashedString);
 		}
 		debug(mRoot);
