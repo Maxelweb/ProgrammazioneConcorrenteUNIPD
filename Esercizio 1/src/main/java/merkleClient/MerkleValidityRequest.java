@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static merkleClient.HashUtil.md5Java;
 
@@ -77,7 +75,9 @@ public class MerkleValidityRequest {
 		for(String currentRequest : mRequests)
 		{
 
-			// Passo 0.
+			// ===================================
+			// Passo 0
+			// ===================================
 			// Inizio della connessione col server
 
 			try(Socket sock = new Socket(authIPAddr, authPort))
@@ -85,10 +85,17 @@ public class MerkleValidityRequest {
 				PrintWriter mexSending = new PrintWriter(sock.getOutputStream(), true);
 				ObjectInputStream mexReceived = new ObjectInputStream(sock.getInputStream());
 
+				// ===================================
+				// Passo 1
+				// ===================================
 
 					// Invio al server le mie richieste
 					mexSending.println(currentRequest);
 					debug(" -> Invio TransID: " + currentRequest);
+
+				// ===================================
+				// Passo 2
+				// ===================================
 
 				// Ricezione degli hash da confrontare
 				try
@@ -101,6 +108,10 @@ public class MerkleValidityRequest {
 					debug("Errore di comunicazione: ");
 					System.out.print(e.getMessage());
 				}
+
+				// ===================================
+				// Passo finale
+				// ===================================
 
 				// Controllo la validità della transazione
 				if(HashFromServer != null && isTransactionValid(currentRequest, HashFromServer))

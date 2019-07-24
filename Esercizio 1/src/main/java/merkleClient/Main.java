@@ -14,12 +14,6 @@ public class Main {
 		String merkleTx_1 = HashUtil.md5Java("0000000001");
 		String merkleTx_2 = HashUtil.md5Java("0000000020");
 
-		// HashUtil.md5Java(
-		/*String merkleRoot = HashUtil.md5Java("01234567");
-		String merkleTx_1 = HashUtil.md5Java("1");
-		String merkleTx_2 = HashUtil.md5Java("2");*/
-
-
 
 		Map<Boolean, List<String>> report =
 				new MerkleValidityRequest.Builder("127.0.0.1", 2323, merkleRoot)
@@ -28,10 +22,13 @@ public class Main {
 						.build()
 						.checkWhichTransactionValid();
 
+
+		// Nota: modifico il forEach per visualizzare i risultati alla fine
+
 		//print the valid transactions.
 		report.entrySet().stream()
 						 .filter(Entry::getKey)
-						 .forEach(Entry::getValue);
+						 .forEach(elem -> System.out.println(elem.getValue()));
 		
 	}	
 }

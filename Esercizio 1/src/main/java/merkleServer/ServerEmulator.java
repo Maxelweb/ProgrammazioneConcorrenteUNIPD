@@ -10,52 +10,68 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-import static merkleClient.HashUtil.md5Java;
+
+/**
+ *   ServerEmulator è una classe viene usata come emulatore di un server che riceve
+ *   in entrata delle richieste per gli hash in base alla transizione ID che
+ *   viene ricevuta da parte di un ipotetico client.
+ *
+ *   Ai fini dell'esempio, gli hash calcolati dal client saranno entrambi NON validi e
+ *   i nodi puramente inventati.
+ */
+
 
 public class ServerEmulator {
 
     final static int PORT = 2323;
 
-    protected static Consumer<String> hashCode = x -> HashUtil.md5Java(x);
+    private static List<String> hashToCheck = new ArrayList<>();
 
-    private List<String> hashToCheck = new ArrayList<>();
-
-    private void getNodes()
+    private static void loadNodes()
     {
-        hashToCheck.add("prova1");
-        hashToCheck.add("prova2");
-        hashToCheck.add("prova3");
+        // Nota: per l'esempio gli hash sono dati casualmente
+        hashToCheck.add(HashUtil.md5Java("0000102060"));
+        hashToCheck.add(HashUtil.md5Java("0000002130"));
+        hashToCheck.add(HashUtil.md5Java("0001022030"));
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
 
-        debug("Avvio...");
+        // Carico i nodi a disposizione
+        loadNodes();
+
+        debug("Avvio... server in attesa di connessioni.");
 
         while(true)
         {
 
             try (   // Realizzo un server socket pronto all'ascolto
                     ServerSocket server = new ServerSocket(PORT);
-                    Socket sock = server.accept()
-            )
+                    Socket sock = server.accept())
             {
                 // Configuro lo stream per ricevere e inviare
                 ObjectOutputStream output = new ObjectOutputStream(sock.getOutputStream());
                 BufferedReader buff = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
-                try {
+
+                // Quando ricevo una connessione, attendo 2 secondi prima di cooldown prima di iniziare il task
+                // e permettere di vedere il risultato
+                try
+                {
                     debug("Connessione ricevuta: " + sock.getRemoteSocketAddress());
-                    Thread.sleep(2500);
-                } catch (InterruptedException e) {
+                    Thread.sleep(2000);
+                }
+                catch (InterruptedException e)
+                {
                     debug(e.getMessage());
                 }
 
                 // Attendo richieste
                 String incomingRequest = buff.readLine();
 
+                // Se la richiesta è a vuoto, chiudo e rimango in attesa nuovamente
                 if (incomingRequest == null)
                 {
                     output.close();
@@ -63,21 +79,28 @@ public class ServerEmulator {
                     continue;
                 }
 
-                debug("Richiesta ricevuta: " + incomingRequest);
+
+                debug("<- TransID ricevuto: " + incomingRequest);
 
                 // Invio la lista degli hash richiesti verificando la connessione
-                if (sock.isConnected()) {
+                if (sock.isConnected())
+                {
                     output.writeObject(hashToCheck);
-                    debug("Hash per la computazione inviati");
                     output.flush();
-                } else
+                    debug("-> Hash per il confronto inviati");
+                }
+                else
                     debug("Errore nell'invio degli hash");
 
+
+                // Chiudo le risorse create per gli stream
                 output.close();
                 buff.close();
+                debug("Ok... server in attesa di connessioni.");
 
-
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 debug("Errore: " + e.getMessage());
             }
 
