@@ -21,6 +21,8 @@ public final class HashMultiSet<T, V> {
 	 * XXX: data structure backing this MultiSet implementation.
 	 */
 
+	// Nota: si presuppone che trattandosi di frequenze, il tipo 'V' deriverà da 'Numbers'
+
 	private List<T> oggetti;
 	private List<V> frequenze;
 	
@@ -29,7 +31,7 @@ public final class HashMultiSet<T, V> {
 	 **/
 	public HashMultiSet() {
 
-		// Creo una hash map come gestore della struttura dati
+		// Creo una due array come ausilio alla struttura dati
 		this.oggetti = new ArrayList<>();
 		this.frequenze = new ArrayList<>();
 	}
@@ -78,10 +80,12 @@ public final class HashMultiSet<T, V> {
 	 * @param t T: element
 	 * @return V: frequency count of parameter t ('0' if not present)
 	 * */
+
+	@SuppressWarnings("unchecked")
 	public V getElementFrequency(T t)
 	{
 		Integer index = oggetti.indexOf(t);
-		return frequenze.get(index);
+		return index == -1 ? (V) new Integer(0) : frequenze.get(index);
 	}
 	
 	
@@ -93,6 +97,8 @@ public final class HashMultiSet<T, V> {
 	 * 
 	 * @param source Path: source of the multiset
 	 * */
+
+	@SuppressWarnings("unchecked")
 	public void buildFromFile(Path source) throws IOException {
 
 		// Controllo delle eccezioni
@@ -100,8 +106,11 @@ public final class HashMultiSet<T, V> {
 			throw new IOException("Method should be invoked with a non null file path");
 		else
 		{
-			String line = Files.readAllLines(source).get(0);
-			buildFromCollection((List<? extends T>) Stream.of(line.split(",")).collect(Collectors.toList()));
+			String firstLine = Files.readAllLines(source).get(0);
+			buildFromCollection(
+					(List<? extends T>) Stream.of(firstLine.split(","))
+										.collect(Collectors.toList())
+			);
 		}
 	}
 
@@ -109,13 +118,17 @@ public final class HashMultiSet<T, V> {
 	 * Same as before with the difference being the source type.
 	 * @param source List<T>: source of the multiset
 	 * */
+
+	@SuppressWarnings("unchecked")
 	public void buildFromCollection(List<? extends T> source) throws IllegalArgumentException {
 
-		// Controllo delle eccezioni e dei test implementati
+		// Controllo delle eccezioni per source
 		if (source == null)
 			throw new IllegalArgumentException("Method should be invoked with a non null file path");
 		else
-			source.stream().forEach(x -> this.addElement(x));
+			// Aggiungo gli elementi nella hash multiset
+			source.stream()
+					.forEach(element -> this.addElement(element));
 	}
 	
 	/**
@@ -127,6 +140,8 @@ public final class HashMultiSet<T, V> {
 	public List<T> linearize() {
 
 		List<T> valoriReali = new ArrayList<>();
+
+		// Linearizzo la lista multiset usando due cicli for
 
 		for(int i=0; i < oggetti.size(); i++)
 		{

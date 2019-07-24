@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static merkleClient.HashUtil.md5Java;
 
@@ -50,40 +52,49 @@ public class MerkleValidityRequest {
 	 * 	<p>Uses the utility method {@link #isTransactionValid(String, String, List<String>) isTransactionValid} </p>
 	 * 	<p>method to check whether the current transaction is valid or not.</p>
 	 * */
+
+	@SuppressWarnings("unchecked")
 	public Map<Boolean, List<String>> checkWhichTransactionValid() throws IOException {
 
-		Map<Boolean, List<String>> risultati = new HashMap<>();
+		// ===================================
+		// Inizializzazione delle strutture dati
+		// ===================================
 
-		List<String> transValid = new ArrayList<>();
-		List<String> transInvalid = new ArrayList<>();
+		Map<Boolean, List<String>> risultati = new HashMap<>();
 		List<String> HashFromServer = null;
 
-		risultati.put(true, transValid);
-		risultati.put(false, transInvalid);
+		risultati.put(true, new ArrayList<>());
+		risultati.put(false,  new ArrayList<>());
+
+		// ===================================
+		// Inizializzazione della connessione per ogni richiesta
+		// ===================================
 
 		debug("Connessione al server [" + authIPAddr + ":" + authPort + "]...");
 
-		// Passo 0.
-		// Chiedo al server ulteriori informazioni
 
-		// Prendo ciascuna singola richiesta che dovrò analizzare
-		for(String request : mRequests)
+		// Consumo ciascuna singola richiesta
+		for(String currentRequest : mRequests)
 		{
+
+			// Passo 0.
+			// Inizio della connessione col server
+
 			try(Socket sock = new Socket(authIPAddr, authPort))
 			{
-				PrintWriter outputFromSocket = new PrintWriter(sock.getOutputStream(), true);
-				ObjectInputStream inputToSocket = new ObjectInputStream(sock.getInputStream());
+				PrintWriter mexSending = new PrintWriter(sock.getOutputStream(), true);
+				ObjectInputStream mexReceived = new ObjectInputStream(sock.getInputStream());
 
-				debug("Richiesta: " + request);
 
-				// Invio al server le mie richieste
-				outputFromSocket.println(request);
+					// Invio al server le mie richieste
+					mexSending.println(currentRequest);
+					debug(" -> Invio TransID: " + currentRequest);
 
 				// Ricezione degli hash da confrontare
 				try
 				{
-					HashFromServer = (ArrayList<String>) inputToSocket.readObject();
-					debug("Ricevuti hash: " + HashFromServer);
+					HashFromServer = (ArrayList<String>) mexReceived.readObject();
+					debug("<- Ricezione Hash: " + HashFromServer);
 				}
 				catch(ClassNotFoundException e)
 				{
@@ -92,16 +103,26 @@ public class MerkleValidityRequest {
 				}
 
 				// Controllo la validità della transazione
-				if(HashFromServer != null && isTransactionValid(request, HashFromServer))
+				if(HashFromServer != null && isTransactionValid(currentRequest, HashFromServer))
 				{
-					transValid.add(request);
-					debug("Transazione valida!");
+					risultati.get(true).add(currentRequest);
+					debug("==> Transazione valida!");
 				}
 				else
 				{
-					transInvalid.add(request);
-					debug("Transazione non valida!");
+					risultati.get(false).add(currentRequest);
+					debug("==> Transazione non valida!");
 				}
+
+
+				// Chiudo gli I/O stream
+				// Nota: Socket è autoclosable
+
+				mexSending.close();
+				mexReceived.close();
+
+				// Il server rimarrà in attesa di altri contatti
+
 			}
 			catch (IOException exc)
 			{
@@ -125,14 +146,13 @@ public class MerkleValidityRequest {
 	 * */
 	private boolean isTransactionValid(String merkleTx, List<String> merkleNodes) {
 		String HashedString = merkleTx;
+		debug("Calcolo il risultato...");
 		for(String singleNode : merkleNodes)
 		{
 			HashedString += singleNode;
 			HashedString = md5Java(HashedString);
-			debug("Hash calcolato: " + HashedString);
 		}
-		debug(mRoot);
-		return mRoot.equals(HashedString);
+		return HashedString.equals(mRoot);
 	}
 
 

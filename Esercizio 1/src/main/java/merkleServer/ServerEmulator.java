@@ -10,6 +10,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static merkleClient.HashUtil.md5Java;
 
@@ -17,16 +19,18 @@ public class ServerEmulator {
 
     final static int PORT = 2323;
 
+    protected static Consumer<String> hashCode = x -> HashUtil.md5Java(x);
+
+    private List<String> hashToCheck = new ArrayList<>();
+
+    private void getNodes()
+    {
+        hashToCheck.add("prova1");
+        hashToCheck.add("prova2");
+        hashToCheck.add("prova3");
+    }
+
     public static void main(String[] args) {
-        List<String> hashToCheck = new ArrayList<>();
-        hashToCheck.add(HashUtil.md5Java("3"));
-        hashToCheck.add(HashUtil.md5Java("01"));
-        hashToCheck.add(HashUtil.md5Java("4567"));
-
-        /*hashToCheck.add(md5Java("test1"));
-        hashToCheck.add(md5Java("test2"));
-        hashToCheck.add(md5Java("test3"));*/
-
 
         debug("Avvio...");
 
